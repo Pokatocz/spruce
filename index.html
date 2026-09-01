@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spruce Log – DonutSMP /orders</title>
+<meta name="description" content="Živé ceny spruce logů z buy orderů (/orders) na DonutSMP.">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;
+    --series-1-wash: rgba(42,120,214,0.10);
+    --meter-track: #cde2fb;
+    --meter-fill: #2a78d6;
+    --good: #0ca30c;
+    --good-text: #006300;
+    --warning: #fab219;
+    --critical: #d03b3b;
+    --critical-text: #b32e2e;
+    --hover-wash: rgba(11,11,11,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5;
+      --series-1-wash: rgba(57,135,229,0.12);
+      --meter-track: #184f95;
+      --meter-fill: #3987e5;
+      --good-text: #0ca30c;
+      --critical-text: #e66767;
+      --hover-wash: rgba(255,255,255,0.05);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-1-wash: rgba(57,135,229,0.12); --meter-track: #184f95; --meter-fill: #3987e5;
+    --good-text: #0ca30c; --critical-text: #e66767; --hover-wash: rgba(255,255,255,0.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 18px; }
+  h1 { font-size: 22px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+  h1 small { font-weight: 450; color: var(--ink-2); font-size: 15px; margin-left: 8px; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+  .status .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .status[data-state="live"] .dot { background: var(--good); }
+  .status[data-state="stale"] .dot { background: var(--warning); }
+  .status[data-state="down"] .dot { background: var(--critical); }
+  .status .txt { font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .hero-row { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 720px) { .hero-row { grid-template-columns: 1fr 1fr; } .hero-row .hero { grid-column: 1 / -1; } }
+  .tile .label { font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
+  .tile .value { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+  .tile .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .hero .value { font-size: 56px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.05; }
+  .hero .value .unit { font-size: 22px; font-weight: 500; color: var(--ink-2); margin-left: 6px; }
+  .delta { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; margin-top: 6px; }
+  .delta.up { color: var(--good-text); }
+  .delta.down { color: var(--critical-text); }
+  .delta.flat { color: var(--ink-2); }
+  .delta .vs { color: var(--muted); font-weight: 400; }
+
+  .chart-card { margin-bottom: 12px; }
+  .chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .chart-head h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .chart-head h2 .key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--series-1); vertical-align: middle; margin-right: 8px; border-radius: 2px; }
+  .ranges { display: flex; gap: 4px; }
+  .ranges button {
+    font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid transparent; background: transparent; color: var(--ink-2);
+  }
+  .ranges button:hover { background: var(--hover-wash); }
+  .ranges button[aria-pressed="true"] { background: var(--hover-wash); color: var(--ink); border-color: var(--border); font-weight: 600; }
+  .chart-wrap { position: relative; }
+  .chart-wrap svg { display: block; width: 100%; height: 260px; outline: none; }
+  .chart-wrap svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 4px; border-radius: 6px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
+  .tooltip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 150px;
+  }
+  .tooltip .t { color: var(--muted); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .tooltip .row { display: flex; align-items: center; gap: 8px; }
+  .tooltip .row .key { width: 14px; border-top: 2px solid var(--series-1); border-radius: 2px; }
+  .tooltip .row strong { font-weight: 650; }
+  .tooltip .row span { color: var(--ink-2); }
+  .tooltip .more { color: var(--ink-2); margin-top: 3px; }
+
+  details { margin-top: 8px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th { font-weight: 600; color: var(--ink-2); font-size: 13px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: var(--hover-wash); }
+  .meter { display: inline-block; vertical-align: middle; width: 90px; height: 6px; border-radius: 3px; background: var(--meter-track); overflow: hidden; margin-right: 8px; }
+  .meter i { display: block; height: 100%; background: var(--meter-fill); border-radius: 3px; }
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 720px) { .meter { width: 56px; } th, td { padding: 8px 8px; } }
+  .orders-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .orders-head h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .orders-head .hint { font-size: 13px; color: var(--muted); }
+  .show-all { margin-top: 10px; font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--ink); cursor: pointer; }
+  .show-all:hover { background: var(--hover-wash); }
+  footer { margin-top: 18px; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .notice { display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px; border: 1px solid var(--border); background: var(--surface); }
+  .notice.show { display: block; }
+  .notice b { font-weight: 600; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Spruce Log <small>DonutSMP · /orders</small></h1>
+    <div class="status" id="status" data-state="unknown"><span class="dot" aria-hidden="true"></span><span class="txt" id="statusText">načítám…</span></div>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <section class="hero-row" aria-label="Souhrn">
+    <div class="card tile hero">
+      <div class="label">Nejlepší cena za kus (nejvyšší buy order)</div>
+      <div class="value" id="best">–</div>
+      <div class="delta flat" id="delta"></div>
+      <div class="sub" id="bestSub"></div>
+    </div>
+    <div class="card tile">
+      <div class="label">Průměr top 5 orderů</div>
+      <div class="value" id="top5">–</div>
+      <div class="sub" id="top5Sub"></div>
+    </div>
+    <div class="card tile">
+      <div class="label">Otevřená poptávka</div>
+      <div class="value" id="demand">–</div>
+      <div class="sub">kusů zbývá doručit</div>
+    </div>
+    <div class="card tile">
+      <div class="label">Otevřené ordery</div>
+      <div class="value" id="count">–</div>
+      <div class="sub" id="countSub"></div>
+    </div>
+  </section>
+
+  <section class="card chart-card" aria-label="Vývoj ceny">
+    <div class="chart-head">
+      <h2><span class="key" aria-hidden="true"></span>Nejlepší cena za kus v čase</h2>
+      <div class="ranges" role="group" aria-label="Rozsah">
+        <button type="button" data-range="24h" aria-pressed="true">24 h</button>
+        <button type="button" data-range="48h" aria-pressed="false">48 h</button>
+        <button type="button" data-range="7d" aria-pressed="false">7 dní</button>
+        <button type="button" data-range="30d" aria-pressed="false">30 dní</button>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <svg id="chart" role="img" aria-label="Graf nejlepší ceny za kus" tabindex="0"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+    <details>
+      <summary>Zobrazit hodnoty jako tabulku</summary>
+      <div class="tbl-wrap"><table id="histTable"><thead><tr><th>Čas</th><th class="num">Nejlepší cena</th><th class="num">Ordery</th><th class="num">Poptávka</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="card" aria-label="Ordery">
+    <div class="orders-head">
+      <h2>Otevřené buy ordery (seřazeno podle ceny)</h2>
+      <span class="hint" id="ordersHint"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="orders">
+        <thead><tr><th>#</th><th class="num">Cena za kus</th><th class="num">Doručeno / celkem</th><th class="num">Zbývá</th><th>Naplněno</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button type="button" class="show-all" id="showAll" hidden>Zobrazit všechny</button>
+  </section>
+
+  <footer>
+    <span id="updatedAt"></span>
+    <span id="nextRefresh"></span>
+    <span>Data: <a id="dataLink" href="#" target="_blank" rel="noopener">GitHub</a></span>
+  </footer>
+</div>
+
+<script>
+// ===================== NASTAVENÍ (změň na svoje) =====================
+const DATA_OWNER  = 'TVUJ_GITHUB_UCET';   // GitHub uživatel, např. 'marek123'
+const DATA_REPO   = 'spruce-data';         // repo, kam bot ukládá prices.json
+const DATA_BRANCH = 'main';
+const DATA_PATH   = 'prices.json';
+const REFRESH_SECONDS = 120;               // jak často stránka stahuje nová data
+const STALE_MINUTES = 15;                  // po kolika minutách bez aktualizace svítí "zpožděno" (bot čte každých 5–8 min)
+const DOWN_MINUTES  = 40;                  // po kolika minutách svítí "bot offline"
+// =====================================================================
+
+const $ = (id) => document.getElementById(id);
+const fmtCZ = new Intl.NumberFormat('cs-CZ');
+const fmtPrice = (n) => n == null ? '–' : '$' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(n);
+const fmtCompact = (n) => {
+  if (n == null) return '–';
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return (n / 1e9).toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + ' mld.';
+  if (abs >= 1e6) return (n / 1e6).toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + ' mil.';
+  if (abs >= 1e3) return (n / 1e3).toLocaleString('cs-CZ', { maximumFractionDigits: 1 }) + ' tis.';
+  return fmtCZ.format(n);
+};
+const fmtTime = (ts) => new Date(ts * 1000).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' });
+const fmtDateTime = (ts) => new Date(ts * 1000).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' });
+const fmtDay = (ts) => new Date(ts * 1000).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'Europe/Prague' });
+const relMinutes = (ts) => Math.round((Date.now() / 1000 - ts) / 60);
+
+let data = null;
+let range = '24h';
+let showAllOrders = false;
+let hoverIndex = null;
+let nextRefreshAt = 0;
+
+$('dataLink').href = `https://github.com/${DATA_OWNER}/${DATA_REPO}/blob/${DATA_BRANCH}/${DATA_PATH}`;
+
+// ---------------------- načítání dat ----------------------
+async function fetchData () {
+  // pro místní testování: index.html?data=prices.json (načte soubor z jiné adresy)
+  const override = new URLSearchParams(location.search).get('data');
+  if (override) {
+    const r = await fetch(override + (override.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  }
+  // 1) GitHub API – vrací vždy aktuální obsah (limit 60 požadavků/hod. na IP)
+  try {
+    const r = await fetch(`https://api.github.com/repos/${DATA_OWNER}/${DATA_REPO}/contents/${DATA_PATH}?ref=${DATA_BRANCH}`, {
+      headers: { Accept: 'application/vnd.github.raw+json' }, cache: 'no-store'
+    });
+    if (r.ok) return await r.json();
+  } catch (e) { /* zkusíme raw */ }
+  // 2) raw.githubusercontent.com – CDN cache ~5 min, parametr t ji většinou obejde
+  const r2 = await fetch(`https://raw.githubusercontent.com/${DATA_OWNER}/${DATA_REPO}/${DATA_BRANCH}/${DATA_PATH}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!r2.ok) throw new Error('HTTP ' + r2.status);
+  return await r2.json();
+}
+
+async function refresh () {
+  if (DATA_OWNER === 'TVUJ_GITHUB_UCET' && !new URLSearchParams(location.search).get('data')) {
+    showNotice('Nastav v index.html konstantu DATA_OWNER na svůj GitHub účet (a DATA_REPO na repo s daty).');
+    setStatus('down', 'není nastaveno');
+    return;
+  }
+  try {
+    const d = await fetchData();
+    data = d;
+    render();
+  } catch (e) {
+    showNotice(`Nepodařilo se načíst data (${e.message}). Zkontroluj nastavení DATA_OWNER / DATA_REPO v index.html a že bot už něco nahrál.`);
+    setStatus('down', 'data nedostupná');
+  }
+  nextRefreshAt = Date.now() + REFRESH_SECONDS * 1000;
+}
+
+function showNotice (html) { const n = $('notice'); n.textContent = ''; n.append(html); n.classList.add('show'); }
+function hideNotice () { $('notice').classList.remove('show'); }
+function setStatus (state, text) { const s = $('status'); s.dataset.state = state; $('statusText').textContent = text; }
+
+// ---------------------- render ----------------------
+function render () {
+  if (!data) return;
+  hideNotice();
+  const lastTs = data.updated_ts || 0;
+  const hbTs = data.heartbeat_ts || 0;
+  const age = lastTs ? relMinutes(lastTs) : Infinity;
+  const hbAge = hbTs ? relMinutes(hbTs) : Infinity;
+
+  if (data.status === 'ok' && age <= STALE_MINUTES) setStatus('live', `živě · před ${age} min`);
+  else if (data.status === 'sleeping') setStatus('stale', `bot spí · ceny před ${isFinite(age) ? fmtAge(age) : '–'}`);
+  else if (data.status === 'break' && hbAge <= DOWN_MINUTES) setStatus('stale', `bot má pauzu · ceny před ${isFinite(age) ? fmtAge(age) : '–'}`);
+  else if (!isFinite(age)) setStatus(hbAge <= DOWN_MINUTES ? 'stale' : 'down', hbAge <= DOWN_MINUTES ? 'bot běží, ceny zatím nemá' : 'zatím žádné ceny');
+  else if (Math.min(age, hbAge) <= DOWN_MINUTES) setStatus('stale', `zpožděno · ceny před ${fmtAge(age)}`);
+  else setStatus('down', `bot offline · ceny před ${fmtAge(age)}`);
+
+  if (data.status === 'sleeping' || data.status === 'break') {
+    showNotice(data.note ? `${data.note}. Zobrazené ceny jsou poslední přečtené.` : 'Bot teď nečte ceny – zobrazené jsou poslední přečtené.');
+  } else if (data.status && data.status !== 'ok' && data.note) {
+    showNotice(`Bot hlásí: ${data.note} (stav: ${data.status})`);
+  } else if (data.suspect) {
+    showNotice('Pozor: nejlepší cena je daleko od nedávného mediánu – nejspíš jednorázový „výkřik" (troll order). Podívej se na reálný vrchol.');
+  }
+
+  // hero + tiles
+  const best = data.best;
+  $('best').textContent = '';
+  if (best != null) {
+    $('best').append(fmtPrice(best));
+    const u = document.createElement('span'); u.className = 'unit'; u.textContent = '/ ks';
+    $('best').append(u);
+  } else $('best').textContent = '–';
+  let bestSub = data.best_remaining != null ? `na tomto orderu zbývá ${fmtCompact(data.best_remaining)} ks` : '';
+  if (data.effective_top != null && best != null && best > data.effective_top * 1.2) {
+    bestSub += ` · pozor: reálný vrchol (poptávka ≥ ${fmtCompact(data.effective_min_demand || 25000)} ks) je ${fmtPrice(data.effective_top)}`;
+  }
+  $('bestSub').textContent = bestSub;
+  renderDelta();
+  $('top5').textContent = fmtPrice(data.top5_avg);
+  const subParts = [];
+  if (data.effective_top != null) subParts.push(`reálný vrchol ≥ ${fmtCompact(data.effective_min_demand || 25000)} ks: ${fmtPrice(data.effective_top)}`);
+  if (data.weighted_avg != null) subParts.push(`vážený průměr ${fmtPrice(data.weighted_avg)}`);
+  if (data.median != null) subParts.push(`medián ${fmtPrice(data.median)}`);
+  $('top5Sub').textContent = subParts.join(' · ');
+  $('demand').textContent = fmtCompact(data.demand);
+  $('count').textContent = data.count != null ? fmtCZ.format(data.count) : '–';
+  $('countSub').textContent = data.pages_read ? `přečteno ${data.pages_read} ${data.pages_read === 1 ? 'stránka' : data.pages_read < 5 ? 'stránky' : 'stránek'} GUI` : '';
+
+  renderChart();
+  renderOrders();
+
+  $('updatedAt').textContent = lastTs ? `Ceny aktualizovány ${fmtDateTime(lastTs)}` : 'Zatím žádná data';
+}
+
+function fmtAge (min) {
+  if (min < 60) return min + ' min';
+  if (min < 48 * 60) return Math.round(min / 60) + ' h';
+  return Math.round(min / 1440) + ' d';
+}
+
+function renderDelta () {
+  const el = $('delta');
+  el.textContent = '';
+  el.className = 'delta flat';
+  const h = data.history || [];
+  if (data.best == null || h.length < 2) return;
+  const target = (data.updated_ts || 0) - 24 * 3600;
+  let ref = null;
+  for (const p of h) { if (p.best != null && p.t <= target) ref = p; }
+  if (!ref) { ref = h.find(p => p.best != null); if (!ref || ref === h[h.length - 1]) return; }
+  const diff = data.best - ref.best;
+  const pct = ref.best ? diff / ref.best * 100 : 0;
+  const dir = Math.abs(diff) < 0.005 ? 'flat' : diff > 0 ? 'up' : 'down';
+  el.className = 'delta ' + dir;
+  const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
+  const sign = dir === 'up' ? '+' : dir === 'down' ? '−' : '±';
+  const since = ref.t <= target ? 'za 24 h' : `od ${fmtDateTime(ref.t)}`;
+  el.append(`${arrow} ${sign}${fmtPrice(Math.abs(diff))} (${sign}${Math.abs(pct).toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %) `);
+  const vs = document.createElement('span'); vs.className = 'vs'; vs.textContent = since; el.append(vs);
+}
+
+// ---------------------- ordery ----------------------
+function renderOrders () {
+  const tbody = $('orders').querySelector('tbody');
+  tbody.textContent = '';
+  const orders = data.orders || [];
+  const limit = showAllOrders ? orders.length : Math.min(15, orders.length);
+  orders.slice(0, limit).forEach((o, i) => {
+    const tr = document.createElement('tr');
+    const pct = (o.total && o.delivered != null) ? Math.min(100, o.delivered / o.total * 100) : null;
+    const cells = [
+      ['', String(i + 1)],
+      ['num', fmtPrice(o.price)],
+      ['num', o.total != null ? `${fmtCompact(o.delivered || 0)} / ${fmtCompact(o.total)}` : '–'],
+      ['num', o.remaining != null ? fmtCompact(o.remaining) : '–']
+    ];
+    for (const [cls, txt] of cells) { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = txt; tr.append(td); }
+    const td = document.createElement('td');
+    if (pct != null) {
+      const m = document.createElement('span'); m.className = 'meter'; m.setAttribute('role', 'img'); m.setAttribute('aria-label', `naplněno ${pct.toFixed(0)} %`);
+      const f = document.createElement('i'); f.style.width = pct.toFixed(1) + '%'; m.append(f);
+      td.append(m, `${pct.toFixed(0)} %`);
+    } else td.textContent = '–';
+    tr.append(td);
+    tbody.append(tr);
+  });
+  const btn = $('showAll');
+  btn.hidden = orders.length <= 15;
+  btn.textContent = showAllOrders ? 'Zobrazit jen prvních 15' : `Zobrazit všechny (${orders.length})`;
+  $('ordersHint').textContent = orders.length ? `${orders.length} orderů · plně doručené jsou vynechané` : 'žádné otevřené ordery';
+}
+$('showAll').addEventListener('click', () => { showAllOrders = !showAllOrders; renderOrders(); });
+
+// ---------------------- graf ----------------------
+document.querySelectorAll('.ranges button').forEach(b => b.addEventListener('click', () => {
+  range = b.dataset.range;
+  document.querySelectorAll('.ranges button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  hoverIndex = null;
+  renderChart();
+}));
+
+function seriesForRange () {
+  const now = data.updated_ts || Math.floor(Date.now() / 1000);
+  if (range === '24h' || range === '48h') {
+    const span = range === '24h' ? 24 * 3600 : 48 * 3600;
+    return (data.history || []).filter(p => p.best != null && now - p.t <= span).map(p => ({ t: p.t, v: p.best, n: p.n, demand: p.demand }));
+  }
+  const span = range === '7d' ? 7 * 86400 : 30 * 86400;
+  return (data.hourly || []).filter(p => p.best_avg != null && now - p.t <= span).map(p => ({ t: p.t, v: p.best_avg, n: p.n, demand: p.demand, min: p.best_min, max: p.best_max }));
+}
+
+function niceTicks (min, max, count) {
+  if (min === max) { min -= 1; max += 1; }
+  const span = max - min;
+  const rough = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  const lo = Math.floor(min / step) * step;
+  const hi = Math.ceil(max / step) * step;
+  const ticks = [];
+  for (let v = lo; v <= hi + step / 2; v += step) ticks.push(Math.round(v * 1e6) / 1e6);
+  return { lo, hi, ticks };
+}
+
+const NS = 'http://www.w3.org/2000/svg';
+function el (name, attrs = {}, text) {
+  const e = document.createElementNS(NS, name);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+let chartState = null;
+function renderChart () {
+  const svg = $('chart');
+  svg.textContent = '';
+  const tip = $('tooltip'); tip.style.display = 'none';
+  const pts = seriesForRange();
+  const W = svg.clientWidth || 800, H = 260;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  renderHistTable(pts);
+  if (pts.length < 2) {
+    svg.append(el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 14 }, pts.length === 1 ? 'Zatím jen jedno měření – graf se vykreslí po dalším.' : 'Zatím žádná data pro tento rozsah.'));
+    chartState = null;
+    return;
+  }
+  const pad = { l: 46, r: 16, t: 14, b: 28 };
+  const x0 = pad.l, x1 = W - pad.r, y0 = pad.t, y1 = H - pad.b;
+  const tMin = pts[0].t, tMax = pts[pts.length - 1].t;
+  const vals = pts.map(p => p.v);
+  const { lo, hi, ticks } = niceTicks(Math.min(...vals), Math.max(...vals), 4);
+  const sx = (t) => x0 + (t - tMin) / Math.max(1, tMax - tMin) * (x1 - x0);
+  const sy = (v) => y1 - (v - lo) / Math.max(1e-9, hi - lo) * (y1 - y0);
+
+  // mřížka + osa y
+  for (const tv of ticks) {
+    const y = sy(tv);
+    svg.append(el('line', { x1: x0, x2: x1, y1: y, y2: y, stroke: 'var(--grid)', 'stroke-width': 1, 'shape-rendering': 'crispEdges' }));
+    svg.append(el('text', { x: x0 - 8, y: y + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 12, style: 'font-variant-numeric: tabular-nums' }, '$' + fmtTickNum(tv)));
+  }
+  svg.append(el('line', { x1: x0, x2: x1, y1: y1, y2: y1, stroke: 'var(--axis)', 'stroke-width': 1, 'shape-rendering': 'crispEdges' }));
+
+  // osa x
+  const longRange = range === '7d' || range === '30d';
+  const candidates = longRange ? [86400, 2 * 86400, 5 * 86400, 7 * 86400] : [2 * 3600, 4 * 3600, 6 * 3600, 12 * 3600, 24 * 3600];
+  const labelPx = longRange ? 80 : 56;
+  let stepSec = candidates[candidates.length - 1];
+  for (const c of candidates) { if ((tMax - tMin) / c * labelPx <= (x1 - x0)) { stepSec = c; break; } }
+  const first = Math.ceil(tMin / stepSec) * stepSec;
+  for (let t = first; t <= tMax; t += stepSec) {
+    const x = sx(t);
+    svg.append(el('line', { x1: x, x2: x, y1: y1, y2: y1 + 4, stroke: 'var(--axis)', 'stroke-width': 1 }));
+    svg.append(el('text', { x, y: y1 + 18, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 12 }, longRange ? fmtDay(t) : fmtTime(t)));
+  }
+
+  // plocha + čára
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + sx(p.t).toFixed(1) + ' ' + sy(p.v).toFixed(1)).join(' ');
+  svg.append(el('path', { d: `${line} L${sx(tMax).toFixed(1)} ${y1} L${sx(tMin).toFixed(1)} ${y1} Z`, fill: 'var(--series-1-wash)', stroke: 'none' }));
+  svg.append(el('path', { d: line, fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  const last = pts[pts.length - 1];
+  svg.append(el('circle', { cx: sx(last.t), cy: sy(last.v), r: 6, fill: 'var(--surface)' }));
+  svg.append(el('circle', { cx: sx(last.t), cy: sy(last.v), r: 4, fill: 'var(--series-1)' }));
+
+  // vrstva pro hover: nitkový kříž + bod
+  const cross = el('line', { x1: 0, x2: 0, y1: y0, y2: y1, stroke: 'var(--axis)', 'stroke-width': 1, style: 'display:none' });
+  const ring = el('circle', { r: 6, fill: 'var(--surface)', style: 'display:none' });
+  const dot = el('circle', { r: 4, fill: 'var(--series-1)', style: 'display:none' });
+  svg.append(cross, ring, dot);
+  chartState = { pts, sx, sy, cross, ring, dot, x0, x1, W };
+  if (hoverIndex != null) showHover(Math.min(hoverIndex, pts.length - 1));
+}
+
+function fmtTickNum (v) {
+  return v.toLocaleString('en-US', { maximumFractionDigits: Math.abs(v) < 10 ? 2 : Math.abs(v) < 100 ? 1 : 0 });
+}
+
+function renderHistTable (pts) {
+  const tbody = $('histTable').querySelector('tbody');
+  tbody.textContent = '';
+  const rows = pts.slice().reverse();
+  for (const p of rows) {
+    const tr = document.createElement('tr');
+    const cells = [['', fmtDateTime(p.t)], ['num', fmtPrice(p.v)], ['num', p.n != null ? fmtCZ.format(p.n) : '–'], ['num', p.demand != null ? fmtCompact(p.demand) : '–']];
+    for (const [cls, txt] of cells) { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = txt; tr.append(td); }
+    tbody.append(tr);
+  }
+}
+
+function showHover (i) {
+  if (!chartState) return;
+  const { pts, sx, sy, cross, ring, dot, W } = chartState;
+  const p = pts[i];
+  if (!p) return;
+  hoverIndex = i;
+  const x = sx(p.t), y = sy(p.v);
+  cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.style.display = '';
+  ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.style.display = '';
+  dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.style.display = '';
+  const tip = $('tooltip');
+  tip.textContent = '';
+  const t = document.createElement('div'); t.className = 't';
+  t.textContent = (range === '7d' || range === '30d') ? `${fmtDateTime(p.t)} (hodinový průměr)` : fmtDateTime(p.t);
+  const row = document.createElement('div'); row.className = 'row';
+  const key = document.createElement('span'); key.className = 'key';
+  const strong = document.createElement('strong'); strong.textContent = fmtPrice(p.v);
+  const lbl = document.createElement('span'); lbl.textContent = 'nejlepší cena / ks';
+  row.append(key, strong, lbl);
+  tip.append(t, row);
+  if (p.min != null && p.max != null && p.min !== p.max) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `rozsah ${fmtPrice(p.min)} – ${fmtPrice(p.max)}`; tip.append(m); }
+  if (p.n != null) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `${fmtCZ.format(p.n)} orderů · poptávka ${fmtCompact(p.demand)}`; tip.append(m); }
+  tip.style.display = 'block';
+  const wrap = $('chart').getBoundingClientRect();
+  const scale = wrap.width / W;
+  const tipW = tip.offsetWidth;
+  let left = x * scale + 12;
+  if (left + tipW > wrap.width) left = x * scale - tipW - 12;
+  tip.style.left = Math.max(0, left) + 'px';
+  tip.style.top = Math.max(0, y * scale - 20) + 'px';
+}
+
+function hideHover () {
+  if (!chartState) return;
+  const { cross, ring, dot } = chartState;
+  cross.style.display = 'none'; ring.style.display = 'none'; dot.style.display = 'none';
+  $('tooltip').style.display = 'none';
+  hoverIndex = null;
+}
+
+$('chart').addEventListener('pointermove', (ev) => {
+  if (!chartState) return;
+  const rect = ev.currentTarget.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (chartState.W / rect.width);
+  const { pts, sx } = chartState;
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < pts.length; i++) { const d = Math.abs(sx(pts[i].t) - x); if (d < bestD) { bestD = d; best = i; } }
+  showHover(best);
+});
+$('chart').addEventListener('pointerleave', hideHover);
+$('chart').addEventListener('keydown', (ev) => {
+  if (!chartState) return;
+  const n = chartState.pts.length;
+  if (ev.key === 'ArrowLeft') { showHover(hoverIndex == null ? n - 1 : Math.max(0, hoverIndex - 1)); ev.preventDefault(); }
+  else if (ev.key === 'ArrowRight') { showHover(hoverIndex == null ? n - 1 : Math.min(n - 1, hoverIndex + 1)); ev.preventDefault(); }
+  else if (ev.key === 'Home') { showHover(0); ev.preventDefault(); }
+  else if (ev.key === 'End') { showHover(n - 1); ev.preventDefault(); }
+  else if (ev.key === 'Escape') hideHover();
+});
+$('chart').addEventListener('blur', hideHover);
+
+let resizeTimer = null;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (data) renderChart(); }, 120); });
+
+// ---------------------- automatická obnova ----------------------
+setInterval(() => {
+  if (!nextRefreshAt) return;
+  const s = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
+  $('nextRefresh').textContent = `Další obnova za ${s} s`;
+  if (data && data.updated_ts) {
+    const age = relMinutes(data.updated_ts);
+    const st = $('status').dataset.state;
+    if (st === 'live') $('statusText').textContent = `živě · před ${age} min`;
+  }
+  if (s === 0) refresh();
+}, 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && nextRefreshAt && Date.now() > nextRefreshAt - 5000) refresh(); });
+
+refresh();
+</script>
+</body>
+</html>
