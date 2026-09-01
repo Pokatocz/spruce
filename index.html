@@ -87,7 +87,7 @@
   .tile .label { font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
   .tile .value { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
   .tile .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .hero .value { font-size: 56px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.05; }
+  .hero .value { font-size: clamp(38px, 4.6vw, 56px); font-weight: 650; letter-spacing: -0.02em; line-height: 1.05; white-space: nowrap; }
   .hero .value .unit { font-size: 22px; font-weight: 500; color: var(--ink-2); margin-left: 6px; }
   .delta { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; margin-top: 6px; }
   .delta.up { color: var(--good-text); }
@@ -156,23 +156,23 @@
 
   <section class="hero-row" aria-label="Souhrn">
     <div class="card tile hero">
-      <div class="label">Nejlepší cena za kus (nejvyšší buy order)</div>
+      <div class="label" id="bestLabel">Reálná cena za kus (nejvyšší order krytý poptávkou)</div>
       <div class="value" id="best">–</div>
       <div class="delta flat" id="delta"></div>
       <div class="sub" id="bestSub"></div>
     </div>
     <div class="card tile">
-      <div class="label">Průměr top 5 orderů</div>
+      <div class="label">Vážený průměr reálných orderů</div>
       <div class="value" id="top5">–</div>
       <div class="sub" id="top5Sub"></div>
     </div>
     <div class="card tile">
-      <div class="label">Otevřená poptávka</div>
+      <div class="label">Reálná poptávka</div>
       <div class="value" id="demand">–</div>
-      <div class="sub">kusů zbývá doručit</div>
+      <div class="sub" id="demandSub">kusů zbývá doručit</div>
     </div>
     <div class="card tile">
-      <div class="label">Otevřené ordery</div>
+      <div class="label">Reálné ordery</div>
       <div class="value" id="count">–</div>
       <div class="sub" id="countSub"></div>
     </div>
@@ -180,7 +180,7 @@
 
   <section class="card chart-card" aria-label="Vývoj ceny">
     <div class="chart-head">
-      <h2><span class="key" aria-hidden="true"></span>Nejlepší cena za kus v čase</h2>
+      <h2><span class="key" aria-hidden="true"></span>Reálná cena za kus v čase</h2>
       <div class="ranges" role="group" aria-label="Rozsah">
         <button type="button" data-range="24h" aria-pressed="true">24 h</button>
         <button type="button" data-range="48h" aria-pressed="false">48 h</button>
@@ -189,12 +189,12 @@
       </div>
     </div>
     <div class="chart-wrap">
-      <svg id="chart" role="img" aria-label="Graf nejlepší ceny za kus" tabindex="0"></svg>
+      <svg id="chart" role="img" aria-label="Graf reálné ceny za kus" tabindex="0"></svg>
       <div class="tooltip" id="tooltip"></div>
     </div>
     <details>
       <summary>Zobrazit hodnoty jako tabulku</summary>
-      <div class="tbl-wrap"><table id="histTable"><thead><tr><th>Čas</th><th class="num">Nejlepší cena</th><th class="num">Ordery</th><th class="num">Poptávka</th></tr></thead><tbody></tbody></table></div>
+      <div class="tbl-wrap"><table id="histTable"><thead><tr><th>Čas</th><th class="num">Reálná cena</th><th class="num">Reálné ordery</th><th class="num">Reálná poptávka</th></tr></thead><tbody></tbody></table></div>
     </details>
   </section>
 
@@ -221,7 +221,7 @@
 
 <script>
 // ===================== NASTAVENÍ (změň na svoje) =====================
-const DATA_OWNER  = 'Pokatocz';   // GitHub uživatel, např. 'marek123'
+const DATA_OWNER  = 'Pokatocz';           // GitHub uživatel
 const DATA_REPO   = 'spruce-data';         // repo, kam bot ukládá prices.json
 const DATA_BRANCH = 'main';
 const DATA_PATH   = 'prices.json';
@@ -297,6 +297,13 @@ function showNotice (html) { const n = $('notice'); n.textContent = ''; n.append
 function hideNotice () { $('notice').classList.remove('show'); }
 function setStatus (state, text) { const s = $('status'); s.dataset.state = state; $('statusText').textContent = text; }
 
+// „reálné" hodnoty (bot v3.2+); u starších dat spadne na celkové
+const realTop = (d) => (d.effective_top != null ? d.effective_top : d.best);
+const realDemand = (d) => (d.demand_real != null ? d.demand_real : d.demand);
+const realCount = (d) => (d.count_real != null ? d.count_real : d.count);
+const ptValue = (p) => (p.eff != null ? p.eff : p.best);
+const hourValue = (h) => (h.eff_avg != null ? h.eff_avg : h.best_avg);
+
 // ---------------------- render ----------------------
 function render () {
   if (!data) return;
@@ -317,33 +324,46 @@ function render () {
     showNotice(data.note ? `${data.note}. Zobrazené ceny jsou poslední přečtené.` : 'Bot teď nečte ceny – zobrazené jsou poslední přečtené.');
   } else if (data.status && data.status !== 'ok' && data.note) {
     showNotice(`Bot hlásí: ${data.note} (stav: ${data.status})`);
+  } else if (data.truncated) {
+    showNotice('Kniha orderů má víc stránek, než bot přečetl (limit maxPages v config.js) – čísla jsou z přečtené části.');
   } else if (data.suspect) {
-    showNotice('Pozor: nejlepší cena je daleko od nedávného mediánu – nejspíš jednorázový „výkřik" (troll order). Podívej se na reálný vrchol.');
+    showNotice('Pozor: nejvyšší order je daleko od nedávného mediánu – nejspíš jednorázový „výkřik" (troll order).');
   }
 
   // hero + tiles
-  const best = data.best;
+  const hero = realTop(data);
+  const minDem = data.effective_min_demand || 25000;
+  $('bestLabel').textContent = 'Reálná cena za kus';
   $('best').textContent = '';
-  if (best != null) {
-    $('best').append(fmtPrice(best));
+  if (hero != null) {
+    $('best').append(fmtPrice(hero));
     const u = document.createElement('span'); u.className = 'unit'; u.textContent = '/ ks';
     $('best').append(u);
   } else $('best').textContent = '–';
-  let bestSub = data.best_remaining != null ? `na tomto orderu zbývá ${fmtCompact(data.best_remaining)} ks` : '';
-  if (data.effective_top != null && best != null && best > data.effective_top * 1.2) {
-    bestSub += ` · pozor: reálný vrchol (poptávka ≥ ${fmtCompact(data.effective_min_demand || 25000)} ks) je ${fmtPrice(data.effective_top)}`;
+  const subs = [];
+  if (data.effective_top != null) subs.push(`nejvyšší cena krytá ≥ ${fmtCompact(minDem)} ks poptávky`);
+  if (data.best != null && data.effective_top != null && data.best > data.effective_top) {
+    subs.push(`nejvyšší order ${fmtPrice(data.best)}` + (data.best_remaining != null ? ` (zbývá jen ${fmtCompact(data.best_remaining)} ks)` : ''));
+  } else if (data.best_remaining != null) {
+    subs.push(`na nejvyšším orderu zbývá ${fmtCompact(data.best_remaining)} ks`);
   }
-  $('bestSub').textContent = bestSub;
+  $('bestSub').textContent = subs.join(' · ');
   renderDelta();
-  $('top5').textContent = fmtPrice(data.top5_avg);
+  const wavg = data.weighted_avg_real != null ? data.weighted_avg_real : data.weighted_avg;
+  $('top5').textContent = fmtPrice(wavg);
   const subParts = [];
-  if (data.effective_top != null) subParts.push(`reálný vrchol ≥ ${fmtCompact(data.effective_min_demand || 25000)} ks: ${fmtPrice(data.effective_top)}`);
-  if (data.weighted_avg != null) subParts.push(`vážený průměr ${fmtPrice(data.weighted_avg)}`);
-  if (data.median != null) subParts.push(`medián ${fmtPrice(data.median)}`);
+  if (data.median_real != null) subParts.push(`medián ${fmtPrice(data.median_real)}`);
+  if (data.top5_avg != null) subParts.push(`Ø top 5 ${fmtPrice(data.top5_avg)}`);
+  if (data.real_price_factor != null && data.effective_top != null) subParts.push(`reálný = cena ≥ ${fmtPrice(Math.round(data.effective_top * data.real_price_factor * 100) / 100)}`);
   $('top5Sub').textContent = subParts.join(' · ');
-  $('demand').textContent = fmtCompact(data.demand);
-  $('count').textContent = data.count != null ? fmtCZ.format(data.count) : '–';
-  $('countSub').textContent = data.pages_read ? `přečteno ${data.pages_read} ${data.pages_read === 1 ? 'stránka' : data.pages_read < 5 ? 'stránky' : 'stránek'} GUI` : '';
+  $('demand').textContent = fmtCompact(realDemand(data));
+  $('demandSub').textContent = data.demand_real != null ? `kusů zbývá doručit · celkem vč. orderů za pár $: ${fmtCompact(data.demand)}` : 'kusů zbývá doručit';
+  const rc = realCount(data);
+  $('count').textContent = rc != null ? fmtCZ.format(rc) : '–';
+  const countParts = [];
+  if (data.count_real != null && data.count != null) countParts.push(`z ${fmtCZ.format(data.count)} celkem`);
+  if (data.pages_read) countParts.push(`${data.pages_read} ${data.pages_read === 1 ? 'stránka' : data.pages_read < 5 ? 'stránky' : 'stránek'} GUI`);
+  $('countSub').textContent = countParts.join(' · ');
 
   renderChart();
   renderOrders();
@@ -362,13 +382,15 @@ function renderDelta () {
   el.textContent = '';
   el.className = 'delta flat';
   const h = data.history || [];
-  if (data.best == null || h.length < 2) return;
+  const cur = realTop(data);
+  if (cur == null || h.length < 2) return;
   const target = (data.updated_ts || 0) - 24 * 3600;
   let ref = null;
-  for (const p of h) { if (p.best != null && p.t <= target) ref = p; }
-  if (!ref) { ref = h.find(p => p.best != null); if (!ref || ref === h[h.length - 1]) return; }
-  const diff = data.best - ref.best;
-  const pct = ref.best ? diff / ref.best * 100 : 0;
+  for (const p of h) { if (ptValue(p) != null && p.t <= target) ref = p; }
+  if (!ref) { ref = h.find(p => ptValue(p) != null); if (!ref || ref === h[h.length - 1]) return; }
+  const refV = ptValue(ref);
+  const diff = cur - refV;
+  const pct = refV ? diff / refV * 100 : 0;
   const dir = Math.abs(diff) < 0.005 ? 'flat' : diff > 0 ? 'up' : 'down';
   el.className = 'delta ' + dir;
   const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
@@ -406,7 +428,7 @@ function renderOrders () {
   const btn = $('showAll');
   btn.hidden = orders.length <= 15;
   btn.textContent = showAllOrders ? 'Zobrazit jen prvních 15' : `Zobrazit všechny (${orders.length})`;
-  $('ordersHint').textContent = orders.length ? `${orders.length} orderů · plně doručené jsou vynechané` : 'žádné otevřené ordery';
+  $('ordersHint').textContent = orders.length ? `${orders.length} orderů seřazených podle ceny · plně doručené vynechány` : 'žádné otevřené ordery';
 }
 $('showAll').addEventListener('click', () => { showAllOrders = !showAllOrders; renderOrders(); });
 
@@ -422,10 +444,10 @@ function seriesForRange () {
   const now = data.updated_ts || Math.floor(Date.now() / 1000);
   if (range === '24h' || range === '48h') {
     const span = range === '24h' ? 24 * 3600 : 48 * 3600;
-    return (data.history || []).filter(p => p.best != null && now - p.t <= span).map(p => ({ t: p.t, v: p.best, n: p.n, demand: p.demand }));
+    return (data.history || []).filter(p => ptValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: ptValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand }));
   }
   const span = range === '7d' ? 7 * 86400 : 30 * 86400;
-  return (data.hourly || []).filter(p => p.best_avg != null && now - p.t <= span).map(p => ({ t: p.t, v: p.best_avg, n: p.n, demand: p.demand, min: p.best_min, max: p.best_max }));
+  return (data.hourly || []).filter(p => hourValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: hourValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand, min: p.eff_min != null ? p.eff_min : p.best_min, max: p.eff_max != null ? p.eff_max : p.best_max }));
 }
 
 function niceTicks (min, max, count) {
@@ -543,11 +565,11 @@ function showHover (i) {
   const row = document.createElement('div'); row.className = 'row';
   const key = document.createElement('span'); key.className = 'key';
   const strong = document.createElement('strong'); strong.textContent = fmtPrice(p.v);
-  const lbl = document.createElement('span'); lbl.textContent = 'nejlepší cena / ks';
+  const lbl = document.createElement('span'); lbl.textContent = 'reálná cena / ks';
   row.append(key, strong, lbl);
   tip.append(t, row);
   if (p.min != null && p.max != null && p.min !== p.max) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `rozsah ${fmtPrice(p.min)} – ${fmtPrice(p.max)}`; tip.append(m); }
-  if (p.n != null) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `${fmtCZ.format(p.n)} orderů · poptávka ${fmtCompact(p.demand)}`; tip.append(m); }
+  if (p.n != null) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `${fmtCZ.format(p.n)} reálných orderů · poptávka ${fmtCompact(p.demand)}`; tip.append(m); }
   tip.style.display = 'block';
   const wrap = $('chart').getBoundingClientRect();
   const scale = wrap.width / W;
