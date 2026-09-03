@@ -147,6 +147,66 @@
   .notice.show { display: block; }
   .notice b { font-weight: 600; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* ---------- bot ke stažení / konfigurátor / návod ---------- */
+  .top-links { font-size: 13px; color: var(--ink-2); margin: -8px 0 14px; }
+  .top-links a { color: var(--series-1); text-decoration: none; }
+  .top-links a:hover { text-decoration: underline; }
+  .section-title { font-size: 19px; font-weight: 650; margin: 32px 0 6px; letter-spacing: -0.01em; }
+  .lead { color: var(--ink-2); font-size: 14px; margin: 0 0 14px; max-width: 720px; }
+  .sub-title { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+  .card + .card { margin-top: 12px; }
+  .card p { margin: 6px 0; font-size: 14px; }
+  .dl-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 8px; }
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--series-1); background: var(--series-1); color: #fff; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px; line-height: 1.2;
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--border); }
+  .btn.secondary:hover { background: var(--hover-wash); filter: none; }
+  .btn.small { font-size: 13px; padding: 6px 10px; font-weight: 500; }
+  .warn-box { border: 1px solid var(--warning); background: rgba(250,178,25,0.10); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 10px 0 4px; }
+  .warn-box b { font-weight: 600; }
+  .tabs { display: flex; gap: 2px; margin: 4px 0 14px; border-bottom: 1px solid var(--grid); }
+  .tabs button {
+    font: inherit; font-size: 14px; padding: 8px 14px; border: none; background: transparent; color: var(--ink-2); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--series-1); font-weight: 600; }
+  .steps { padding-left: 22px; margin: 6px 0 10px; font-size: 14px; }
+  .steps li { margin: 8px 0; }
+  .steps li::marker { color: var(--ink-2); font-weight: 600; }
+  code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: var(--hover-wash); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--hover-wash); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.45; overflow-x: auto; margin: 6px 0 10px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+  @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+  .field label { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
+  .field input[type=number], .field input[type=text], .field input[type=email], .field input[type=password], .field select {
+    font: inherit; width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--page); color: var(--ink);
+  }
+  .field input:focus-visible, .field select:focus-visible, .check input:focus-visible { outline: 2px solid var(--series-1); outline-offset: 1px; }
+  .field .hint { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .field .hint.calc { color: var(--ink-2); }
+  .check { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; }
+  .check input { margin-top: 3px; flex: none; }
+  .check small { display: block; color: var(--muted); font-size: 12px; }
+  .radio-row { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
+  .radio-row label { display: inline-flex; align-items: center; gap: 6px; }
+  fieldset { border: 1px solid var(--grid); border-radius: 10px; padding: 10px 14px 12px; margin: 0 0 12px; min-width: 0; }
+  legend { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 0 6px; }
+  .summary-box { border-left: 3px solid var(--series-1); padding: 8px 12px; margin: 12px 0; background: var(--hover-wash); border-radius: 0 8px 8px 0; font-size: 14px; }
+  .summary-box.warn { border-left-color: var(--critical); }
+  .summary-box b { font-weight: 600; }
+  textarea.json { width: 100%; min-height: 200px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.4; border-radius: 8px; border: 1px solid var(--border); background: var(--page); color: var(--ink); padding: 10px; resize: vertical; }
+  .cmd-table td:first-child { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  .cmd-table td { white-space: normal; }
+  .kv-table td:first-child { font-weight: 600; white-space: nowrap; }
+  .kv-table td { white-space: normal; vertical-align: top; }
+  .ok-copy { color: var(--good-text); font-size: 13px; align-self: center; }
 </style>
 </head>
 <body>
@@ -155,6 +215,8 @@
     <h1>Spruce Log <small>DonutSMP · /orders</small></h1>
     <div class="status" id="status" data-state="unknown"><span class="dot" aria-hidden="true"></span><span class="txt" id="statusText">načítám…</span></div>
   </header>
+
+  <div class="top-links">Živé ceny z buy orderů · <a href="#bot">Bot ke stažení a konfigurátor ↓</a></div>
 
   <div class="notice" id="notice"></div>
 
@@ -214,6 +276,244 @@
       </table>
     </div>
     <button type="button" class="show-all" id="showAll" hidden>Zobrazit všechny</button>
+  </section>
+
+  <!-- ===================== BOT KE STAŽENÍ ===================== -->
+  <h2 class="section-title" id="bot">Bot ke stažení – sleduje ceny a obchoduje za tebe</h2>
+  <p class="lead">Stejný bot, který krmí tuhle stránku. Běží na PC i na telefonu (Termux), přihlásí se tvým Minecraft účtem,
+    každých pár minut přečte <code>/orders spruce log</code> a podle tvých pravidel <b>vytvoří nákupní order, když je reálná cena pod X</b>,
+    a <b>naplněný order prodá, když je reálná cena nad Y</b>. Nastavení si naklikáš tady na stránce – nic se nikam neposílá, všechno zůstává u tebe.</p>
+
+  <section class="card" aria-labelledby="dlTitle">
+    <h3 class="sub-title" id="dlTitle">1. Stáhni bota</h3>
+    <p>Jeden balíček pro PC i telefon – uvnitř je <code>start.bat</code> (Windows) i <code>start.sh</code> (Termux / Linux / Mac). Verze <span id="botVersion">3.3</span>, bez tvých údajů (účet a pravidla dodá <code>config.local.json</code> z konfigurátoru níže).</p>
+    <div class="dl-row">
+      <a class="btn" href="spruce-bot.zip" download="spruce-bot.zip" id="dlPc">💻 Stáhnout pro PC</a>
+      <a class="btn secondary" href="spruce-bot.zip" download="spruce-bot.zip" id="dlPhone">📱 Stáhnout pro telefon (Termux)</a>
+    </div>
+    <div class="warn-box"><b>Na vlastní riziko.</b> Bot obchoduje s tvými penězi ve hře a boti bývají proti pravidlům serveru – ideálně používej druhý účet.
+      Proto startuje v <b>testovacím režimu</b>: jen píše, co <i>by</i> koupil nebo prodal, dokud ho sám nepřepneš na ostrý.
+      Bot smí běžet jen <b>jednou</b> na účet (jinak „You are already online").</div>
+  </section>
+
+  <section class="card" aria-labelledby="cfgTitle">
+    <h3 class="sub-title" id="cfgTitle">2. Nastav si bota → <code>config.local.json</code></h3>
+    <p>Vyplň, co chceš, a stáhni soubor. Dáš ho do složky bota vedle <code>bot.js</code>. Změna pravidel = nový soubor + restart bota (<code>quit</code> a spustit znovu).</p>
+    <form id="cfgForm" autocomplete="off">
+      <fieldset>
+        <legend>Účet</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="fEmail">E-mail Microsoft účtu s Minecraftem (bot)</label>
+            <input type="email" id="fEmail" placeholder="bot@email.cz">
+            <div class="hint">Heslo se sem nepíše – bot se poprvé přihlásí kódem na microsoft.com/link a pak si to pamatuje. Můžeš nechat prázdné a vyplnit později přes <code>node bot.js --setup</code>.</div>
+          </div>
+          <div class="field">
+            <label for="fCycle">Jak často číst ceny (sekundy)</label>
+            <input type="number" id="fCycle" min="60" max="3600" step="10" value="240">
+            <div class="hint">+ náhodně 0–<span id="jitterLbl">120</span> s navíc, ať to není jako hodinky. Doporučeno 180–360 s (příliš často = nápadné).</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Obchodování</legend>
+        <div class="check" style="margin-bottom:10px"><input type="checkbox" id="fTradeOn" checked><label for="fTradeOn"><b>Zapnout obchodování</b><small>Bez zaškrtnutí bot jen sleduje ceny (a případně krmí web).</small></label></div>
+        <div class="radio-row" id="modeRow" style="margin-bottom:12px">
+          <label><input type="radio" name="fMode" value="test" checked> <b>Testovací režim</b> – jen píše, co by udělal</label>
+          <label><input type="radio" name="fMode" value="live"> <b>Ostrý režim</b> – kupuje a prodává doopravdy</label>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="fBuy">Nákup, když je reálná cena POD ($ za kus)</label>
+            <input type="number" id="fBuy" min="0" step="0.1" value="60">
+            <div class="hint">Cena tvého orderu = reálný vrchol + „o kolik nad" (níže), ale nikdy víc než tohle. 0 = nenakupovat.</div>
+          </div>
+          <div class="field">
+            <label for="fSell">Prodej, když je reálná cena NAD ($ za kus)</label>
+            <input type="number" id="fSell" min="0" step="0.1" value="65">
+            <div class="hint">Naplněný order (dodané kusy) bot vyzvedne a prodá tlačítkem Sell. 0 = neprodávat (jen nakupovat).</div>
+          </div>
+          <div class="field">
+            <label for="fUnits">Kolik kusů kupovat na jeden order</label>
+            <input type="number" id="fUnits" min="2880" step="2880" value="2880">
+            <div class="hint calc" id="unitsHint"></div>
+          </div>
+          <div class="field">
+            <label for="fMaxOrders">Kolik orderů smí mít bot najednou</label>
+            <input type="number" id="fMaxOrders" min="1" max="20" step="1" value="1">
+            <div class="hint">Počítají se i naplněné, ještě neprodané ordery. 1 = vždy jen jeden obchod rozdělaný.</div>
+          </div>
+          <div class="field">
+            <label for="fBid">O kolik $ nabídnout nad reálný vrchol</label>
+            <input type="number" id="fBid" min="-50" step="0.1" value="1">
+            <div class="hint">Order nad ostatními se plní první. 0 = stejná cena jako nejvyšší reálný order.</div>
+          </div>
+          <div class="field">
+            <label for="fCancel">Zrušit order bez pohybu po (minuty)</label>
+            <input type="number" id="fCancel" min="0" step="5" value="0">
+            <div class="hint">Když do orderu X minut nikdo nic nedodá, bot ho zruší (peníze se vrátí) a zkusí to znovu za lepší cenu. 0 = nikdy nerušit.</div>
+          </div>
+          <div class="field">
+            <label for="fReserve">Rezerva na účtu ($)</label>
+            <input type="number" id="fReserve" min="0" step="1000" value="0">
+            <div class="hint">Tolik peněz bot nikdy neutratí. 0 = bez rezervy.</div>
+          </div>
+          <div class="field">
+            <label for="fPerHour">Max útrata za hodinu ($)</label>
+            <input type="number" id="fPerHour" min="0" step="1000" value="0">
+            <div class="hint">Pojistka proti rozjetému nakupování. 0 = bez limitu.</div>
+          </div>
+        </div>
+        <div class="check" style="margin-top:12px"><input type="checkbox" id="fNoLoss" checked><label for="fNoLoss">Nikdy neprodat pod nákupní cenu<small>I když je cena nad „prodej nad", počká, dokud prodej nevydělá aspoň to, co stál nákup.</small></label></div>
+        <div class="dl-row" style="margin-top:12px"><button type="button" class="btn secondary small" id="suggestBtn">Navrhnout limity podle aktuální ceny</button><span class="hint" id="suggestHint" style="align-self:center;color:var(--muted);font-size:12px"></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Chování (ať bot vypadá jako člověk)</legend>
+        <div class="form-grid">
+          <div class="field">
+            <div class="check"><input type="checkbox" id="fHoursOn"><label for="fHoursOn">Aktivní hodiny – mimo ně se bot odpojí a spí</label></div>
+            <div class="form-grid" style="margin-top:8px">
+              <div class="field"><label for="fFrom">Od (hodina)</label><input type="number" id="fFrom" min="0" max="23" value="9"></div>
+              <div class="field"><label for="fTo">Do (hodina)</label><input type="number" id="fTo" min="0" max="24" value="23"></div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="check"><input type="checkbox" id="fBreaks" checked><label for="fBreaks">Občas si dát pauzu (odpojí se na 3–10 minut)<small>Doporučeno – trvale online bot je nápadný.</small></label></div>
+            <div class="check" style="margin-top:8px"><input type="checkbox" id="fAfk" checked><label for="fAfk">Anti-AFK (občas se rozhlédne)</label></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Upozornění na Telegram (volitelné)</legend>
+        <div class="form-grid">
+          <div class="field">
+            <label for="fTgToken">Token bota od @BotFather</label>
+            <input type="text" id="fTgToken" placeholder="123456789:AAE…" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="fTgChat">Tvoje chat ID</label>
+            <input type="text" id="fTgChat" placeholder="např. 8862534749" spellcheck="false">
+            <div class="hint">Nevíš? Vyplň jen token, napiš svému botovi v Telegramu zprávu a v konzoli bota dej <code>tgid</code>.</div>
+          </div>
+        </div>
+        <div class="hint" style="font-size:12px;color:var(--muted);margin-top:6px">Bot pošle zprávu o každém nákupu/prodeji, pádu, kicku nebo možném banu.</div>
+      </fieldset>
+
+      <details style="margin:0 0 12px">
+        <summary>Pokročilé: publikovat ceny na vlastní web (GitHub)</summary>
+        <div class="form-grid" style="margin-top:10px">
+          <div class="field"><label for="fGhOwner">GitHub uživatel</label><input type="text" id="fGhOwner" placeholder="tvuj-ucet" spellcheck="false"></div>
+          <div class="field"><label for="fGhRepo">Repo s daty</label><input type="text" id="fGhRepo" placeholder="spruce-data" spellcheck="false"></div>
+          <div class="field"><label for="fGhToken">Fine-grained token (Contents: Read and write)</label><input type="text" id="fGhToken" placeholder="github_pat_…" spellcheck="false"></div>
+        </div>
+        <div class="hint" style="font-size:12px;color:var(--muted);margin-top:6px">Jen pokud si chceš postavit vlastní stránku jako je tahle (kopie tohoto <code>index.html</code> s tvým účtem v <code>DATA_OWNER</code>). Jinak nech prázdné – bot pak nic nikam nenahrává.</div>
+      </details>
+    </form>
+
+    <div class="summary-box" id="cfgSummary"></div>
+    <label for="cfgJson" class="hint" style="font-size:13px;color:var(--ink-2);display:block;margin-bottom:4px">Náhled souboru <code>config.local.json</code></label>
+    <textarea class="json" id="cfgJson" readonly spellcheck="false"></textarea>
+    <div class="dl-row">
+      <button type="button" class="btn" id="cfgDownload">⬇ Stáhnout config.local.json</button>
+      <button type="button" class="btn secondary" id="cfgCopy">Zkopírovat obsah</button>
+      <span class="ok-copy" id="copyOk" hidden>Zkopírováno – ulož jako config.local.json.</span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="guideTitle">
+    <h3 class="sub-title" id="guideTitle">3. Spusť bota</h3>
+    <div class="tabs" role="tablist" aria-label="Návod">
+      <button type="button" role="tab" id="tabPc" aria-selected="true" aria-controls="guidePc">💻 PC (Windows / Mac / Linux)</button>
+      <button type="button" role="tab" id="tabPhone" aria-selected="false" aria-controls="guidePhone">📱 Telefon (Android – Termux)</button>
+    </div>
+
+    <div id="guidePc" role="tabpanel" aria-labelledby="tabPc">
+      <ol class="steps">
+        <li>Nainstaluj <b>Node.js LTS</b> z <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> (stačí výchozí volby, na konci restartuj otevřená okna).</li>
+        <li>Stažený <code>spruce-bot.zip</code> rozbal (pravý klik → <i>Extrahovat vše</i>). Vznikne složka <code>spruce-bot</code>.</li>
+        <li>Do složky <code>spruce-bot</code> dej <code>config.local.json</code> z konfigurátoru (musí ležet vedle <code>bot.js</code>).</li>
+        <li><b>Windows:</b> poklepej na <code>start.bat</code>. <b>Mac / Linux:</b> v terminálu <code>cd spruce-bot &amp;&amp; bash start.sh</code>. Poprvé si stáhne knihovny (1–3 min).</li>
+        <li><b>Přihlášení (jen poprvé):</b> bot vypíše odkaz <code>microsoft.com/link</code> a kód. Otevři odkaz, přihlas se účtem bota, zadej kód. Bot si přihlášení uloží do složky <code>auth-cache</code>.</li>
+        <li>Bot se připojí na DonutSMP, každých pár minut přečte ordery a v testovacím režimu vypíše, co by koupil/prodal. Napiš <code>status</code> + Enter pro přehled, <code>help</code> pro všechny příkazy.</li>
+        <li>Až budeš spokojený, přepni na ostrý režim: v konfigurátoru zvol <i>Ostrý</i> a nahraď soubor (restart bota), nebo napiš do konzole <code>dry off</code> (platí do restartu).</li>
+      </ol>
+      <p style="color:var(--muted);font-size:13px">Zavření okna = vypnutí bota. Při pádu se sám restartuje. Logy najdeš v <code>logs/bot.log</code>, vývoj cen v <code>logs/trh-sprucelog.csv</code> (Excel).</p>
+    </div>
+
+    <div id="guidePhone" role="tabpanel" aria-labelledby="tabPhone" hidden>
+      <ol class="steps">
+        <li>Nainstaluj <b>Termux z F-Droid</b>: <a href="https://f-droid.org/packages/com.termux/" target="_blank" rel="noopener">f-droid.org/packages/com.termux</a> (verze z Google Play je zastaralá a nefunguje).</li>
+        <li>V Termuxu napiš (každý řádek potvrď Enterem; při dotazu na úložiště klepni <i>Povolit</i>):
+<pre><code>pkg update -y &amp;&amp; pkg install -y nodejs-lts unzip
+termux-setup-storage</code></pre></li>
+        <li>V prohlížeči telefonu stáhni <code>spruce-bot.zip</code> (tlačítko výše) a <code>config.local.json</code> (konfigurátor). Oba skončí ve složce <i>Download</i>.</li>
+        <li>Rozbal bota a nakopíruj nastavení:
+<pre><code>cd ~ &amp;&amp; unzip -o ~/storage/downloads/spruce-bot.zip
+cp ~/storage/downloads/config.local.json ~/spruce-bot/</code></pre></li>
+        <li>Spusť: <pre><code>cd ~/spruce-bot &amp;&amp; bash start.sh</code></pre> Poprvé instaluje knihovny (2–5 min).</li>
+        <li><b>Přihlášení (jen poprvé):</b> bot vypíše odkaz a kód – dlouze podrž, zkopíruj, otevři v prohlížeči, přihlas se účtem bota a zadej kód.</li>
+        <li>Aby běžel i se zhasnutým displejem: v <i>Nastavení → Aplikace → Termux → Baterie</i> zvol <i>Bez omezení</i>; v notifikaci Termuxu klepni na <i>Acquire wakelock</i> (start.sh to zkouší sám). Termux nezavírej, jen minimalizuj.</li>
+        <li>Ovládání stejné jako na PC: <code>status</code>, <code>dry off</code>, <code>quit</code>. Ctrl+C = tlačítko <i>CTRL</i> na klávesnici Termuxu + <kbd>c</kbd>. Příště bota spustíš zase přes <code>cd ~/spruce-bot &amp;&amp; bash start.sh</code>.</li>
+      </ol>
+      <p style="color:var(--muted);font-size:13px">Data (datové připojení) spotřebuje minimum – bot má „tiny" dohled a stahuje jen menu. Wi-Fi ale drž zapnutou, mobilní síť občas mění IP a server bota odpojí (sám se připojí znovu).</p>
+    </div>
+
+    <details>
+      <summary>Co které nastavení znamená</summary>
+      <div class="tbl-wrap" style="margin-top:8px"><table class="kv-table">
+        <tbody>
+          <tr><td>Reálná cena</td><td>Stejná jako nahoře na stránce: nejvyšší cena, nad kterou je aspoň 25 tis. kusů skutečné poptávky. Jednorázové „výkřiky" (100 kusů za $800) se ignorují – podle nich bot nikdy neobchoduje.</td></tr>
+          <tr><td>Nákup pod X</td><td>Bot vytvoří nákupní order (<i>New Order</i>), když reálná cena klesne pod X. Cena orderu je reálný vrchol + „o kolik nad", ale nejvýš X – takže nikdy nekoupí dráž, než jsi dovolil. Peníze se strhnou hned při vytvoření orderu.</td></tr>
+          <tr><td>Prodej nad Y</td><td>Naplněný order (všechny kusy dodané) bot vyzvedne (<i>Collect</i>) a prodá tlačítkem <i>Sell</i> – kusy jdou do nejvyšších orderů ostatních hráčů. Prodává, jen když by za ně dostal aspoň Y za kus (počítá se podle skutečných orderů v knize, ne podle výkřiku).</td></tr>
+          <tr><td>Kolik kusů</td><td>Násobky 2 880 (jedna stránka). Menší množství nejde přes emerald prodat, proto bot počet zaokrouhlí dolů na celé stránky.</td></tr>
+          <tr><td>Max orderů</td><td>Kolik orderů (i naplněných, ještě neprodaných) smí bot mít. Víc orderů = víc peněz v obchodech najednou.</td></tr>
+          <tr><td>Zrušit po X min</td><td>Order, do kterého X minut nikdo nic nedodal, bot zruší a peníze se vrátí (aby nevisel, když cena utekla nahoru). Order s aspoň jednou dodanou stránkou se zruší také a dodané kusy se pak prodají, až bude cena.</td></tr>
+          <tr><td>Rezerva / limit útraty</td><td>Pojistky: bot nikdy nesáhne na rezervu a za hodinu neutratí víc než limit. Zůstatek si zjišťuje příkazem <code>/bal</code>.</td></tr>
+          <tr><td>Interval čtení</td><td>Jak často bot otevírá knihu orderů (+ náhodný přídavek). Každé čtení projde ~10 stránek – příliš často je nápadné a zbytečné.</td></tr>
+          <tr><td>Aktivní hodiny, pauzy, anti-AFK</td><td>Bot mimo hodiny spí (odpojí se), občas si dá pauzu s odpojením a mezi kliky dělá lidské prodlevy – ať nevypadá jako stroj.</td></tr>
+        </tbody>
+      </table></div>
+    </details>
+
+    <details>
+      <summary>Příkazy v konzoli bota</summary>
+      <div class="tbl-wrap" style="margin-top:8px"><table class="cmd-table">
+        <tbody>
+          <tr><td>help</td><td>seznam příkazů</td></tr>
+          <tr><td>status</td><td>připojení, poslední ceny, stav obchodování, zůstatek, zisk</td></tr>
+          <tr><td>cyklus</td><td>hned přečíst ceny (a obchodovat)</td></tr>
+          <tr><td>dry on / dry off</td><td>testovací / <b>ostrý</b> režim (do restartu; trvale v config.local.json)</td></tr>
+          <tr><td>obchod on / obchod off</td><td>zapnout / vypnout obchodování (do restartu)</td></tr>
+          <tr><td>ordery</td><td>tvoje ordery na serveru (slot, cena, doručeno, naplněn)</td></tr>
+          <tr><td>bal · profit</td><td>zůstatek · celkový zisk a počet obchodů</td></tr>
+          <tr><td>kup 2880 [cena]</td><td>ručně vytvořit order (bez ceny: reálný vrchol + „o kolik nad")</td></tr>
+          <tr><td>prodej [slot]</td><td>prodat naplněný order (bez slotu ten nejlevněji koupený)</td></tr>
+          <tr><td>zrus &lt;slot&gt;</td><td>zrušit order (slot z <code>ordery</code>)</td></tr>
+          <tr><td>historie</td><td>poslední měření cen</td></tr>
+          <tr><td>tg [text] · tgid</td><td>test Telegramu · zjistit chat ID</td></tr>
+          <tr><td>okno · klik &lt;název|slot&gt; · input &lt;text&gt; · seq a &gt; b</td><td>ladění menu (výpis otevřeného okna, kliknutí, zápis do políčka, sekvence)</td></tr>
+          <tr><td>quit</td><td>ukončit bota</td></tr>
+        </tbody>
+      </table></div>
+    </details>
+
+    <details>
+      <summary>Když něco nejde</summary>
+      <div class="tbl-wrap" style="margin-top:8px"><table class="kv-table">
+        <tbody>
+          <tr><td>You are already online</td><td>Na účtu je někdo přihlášený (ty ve hře nebo druhá kopie bota). Odhlas se, bot to zkusí sám za pár minut.</td></tr>
+          <tr><td>Invalid sequence / kick</td><td>Anti-bot serveru. Bot posílá stejné pakety jako hra, ale občas to přijde – po pár minutách se připojí znovu. Když se to opakuje mnohokrát za hodinu, dej pauzu.</td></tr>
+          <tr><td>Menu se neotvírá</td><td>Server občas botovi přestane otvírat menu; po dvou prázdných kolech se bot sám přepojí.</td></tr>
+          <tr><td>Zůstatek se nečte</td><td>Bot čte odpověď na <code>/bal</code>. Když ji nepozná, nakupuje jen bez rezervy a bez hodinového limitu (ty zůstatek potřebují). Napiš mi text z <code>logs/chat.log</code>.</td></tr>
+          <tr><td>Tlačítko … nenalezeno</td><td>Server změnil menu. Napiš <code>okno</code> a pošli výpis – klikací sekvence se upraví v <code>config.js</code> (sekce <code>trade.createFlow</code> / <code>sellFlow</code>).</td></tr>
+          <tr><td>Windows: „Assertion failed … async.c" při ukončení</td><td>Neškodná hláška Node.js na Windows po skončení programu.</td></tr>
+          <tr><td>Aktualizace bota</td><td>Stáhni nový zip a rozbal přes starou složku – <code>config.local.json</code>, <code>auth-cache</code> a <code>data</code> zůstanou.</td></tr>
+        </tbody>
+      </table></div>
+    </details>
   </section>
 
   <footer>
@@ -678,6 +978,150 @@ setInterval(() => {
   if (s === 0) refresh();
 }, 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && nextRefreshAt && Date.now() > nextRefreshAt - 5000) refresh(); });
+
+// ===================== BOT KE STAŽENÍ: návod (záložky) =====================
+function selectGuide (which) {
+  const pc = which === 'pc';
+  $('tabPc').setAttribute('aria-selected', String(pc));
+  $('tabPhone').setAttribute('aria-selected', String(!pc));
+  $('guidePc').hidden = !pc;
+  $('guidePhone').hidden = pc;
+  try { localStorage.setItem('spruce-guide', which); } catch (e) { /* nevadí */ }
+}
+$('tabPc').addEventListener('click', () => selectGuide('pc'));
+$('tabPhone').addEventListener('click', () => selectGuide('phone'));
+$('dlPc').addEventListener('click', () => selectGuide('pc'));
+$('dlPhone').addEventListener('click', () => selectGuide('phone'));
+try { if (localStorage.getItem('spruce-guide') === 'phone') selectGuide('phone'); } catch (e) { /* nevadí */ }
+if (/Android/i.test(navigator.userAgent)) { try { if (!localStorage.getItem('spruce-guide')) selectGuide('phone'); } catch (e) { selectGuide('phone'); } }
+
+// ===================== KONFIGURÁTOR → config.local.json =====================
+// Všechno se počítá jen v prohlížeči – nic se nikam neposílá. Bot soubor
+// spojí s výchozím config.js (config.local.json má přednost).
+const PAGE_UNITS = 2880;
+const num = (id, def = 0) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : def; };
+const str = (id) => $(id).value.trim();
+const FORM_IDS = ['fEmail', 'fCycle', 'fTradeOn', 'fBuy', 'fSell', 'fUnits', 'fMaxOrders', 'fBid', 'fCancel', 'fReserve', 'fPerHour', 'fNoLoss', 'fHoursOn', 'fFrom', 'fTo', 'fBreaks', 'fAfk', 'fTgChat', 'fGhOwner', 'fGhRepo'];
+
+function buildConfig () {
+  const tradeOn = $('fTradeOn').checked;
+  const live = document.querySelector('input[name=fMode]:checked').value === 'live';
+  const units = Math.max(PAGE_UNITS, Math.floor(num('fUnits', PAGE_UNITS) / PAGE_UNITS) * PAGE_UNITS);
+  const cfg = {};
+  if (str('fEmail')) cfg.account = { email: str('fEmail') };
+  const cycle = Math.min(3600, Math.max(60, Math.round(num('fCycle', 240))));
+  cfg.cycle = { seconds: cycle, jitterSeconds: Math.round(cycle / 2) };
+  cfg.human = {
+    activeHours: { enabled: $('fHoursOn').checked, from: Math.min(23, Math.max(0, Math.round(num('fFrom', 9)))), to: Math.min(24, Math.max(0, Math.round(num('fTo', 23)))) },
+    breaks: { enabled: $('fBreaks').checked },
+    antiAfk: $('fAfk').checked
+  };
+  cfg.trade = {
+    enabled: tradeOn,
+    dryRun: !live,
+    buyBelow: Math.max(0, num('fBuy', 0)),
+    sellAbove: Math.max(0, num('fSell', 0)),
+    buyUnits: units,
+    maxOrders: Math.max(1, Math.round(num('fMaxOrders', 1))),
+    bidAboveTop: num('fBid', 1),
+    neverSellAtLoss: $('fNoLoss').checked,
+    cancelAfterMinutes: Math.max(0, Math.round(num('fCancel', 0))),
+    minBalanceReserve: Math.max(0, Math.round(num('fReserve', 0))),
+    maxSpendPerHour: Math.max(0, Math.round(num('fPerHour', 0)))
+  };
+  const tgToken = str('fTgToken'), tgChat = str('fTgChat');
+  if (tgToken) cfg.telegram = { enabled: !!tgChat, token: tgToken, chatId: tgChat };
+  const ghOwner = str('fGhOwner'), ghToken = str('fGhToken');
+  if (ghOwner && ghToken) cfg.publish = { enabled: true, owner: ghOwner, repo: str('fGhRepo') || 'spruce-data', token: ghToken };
+  else cfg.publish = { enabled: false };
+  return { cfg, units, live, tradeOn };
+}
+
+function renderConfig () {
+  const { cfg, units, live, tradeOn } = buildConfig();
+  $('cfgJson').value = JSON.stringify(cfg, null, 2) + '\n';
+  $('jitterLbl').textContent = fmtCZ.format(cfg.cycle.jitterSeconds);
+  const buy = cfg.trade.buyBelow, sell = cfg.trade.sellAbove;
+  const pages = units / PAGE_UNITS;
+  $('unitsHint').textContent = `= ${pages} ${pages === 1 ? 'stránka' : pages < 5 ? 'stránky' : 'stránek'} · při ceně ${fmtPrice(buy)} stojí order ≈ ${fmtPrice(units * buy)}` + (num('fUnits') !== units ? ` (zaokrouhleno na celé stránky: ${fmtCZ.format(units)} ks)` : '');
+  const box = $('cfgSummary');
+  box.className = 'summary-box';
+  box.textContent = '';
+  if (!tradeOn) {
+    box.append('Obchodování je vypnuté – bot bude jen sledovat ceny' + (cfg.publish.enabled ? ' a nahrávat je na tvůj web.' : '.'));
+  } else {
+    const parts = [];
+    const strong = (t) => { const b = document.createElement('b'); b.textContent = t; return b; };
+    parts.push(live ? strong('OSTRÝ REŽIM – bot bude kupovat a prodávat doopravdy. ') : strong('Testovací režim – bot jen píše, co by udělal. '));
+    if (buy > 0) parts.push(`Když reálná cena klesne pod ${fmtPrice(buy)}, vytvoří order na ${fmtCZ.format(units)} ks (max ${fmtPrice(units * buy)}). `);
+    else parts.push('Nákup vypnutý (0). ');
+    if (sell > 0) parts.push(`Naplněný order prodá, až bude reálná cena aspoň ${fmtPrice(sell)}` + (cfg.trade.neverSellAtLoss ? ' a prodej neprodělá' : '') + `. `);
+    else parts.push('Prodej vypnutý (0). ');
+    if (buy > 0 && sell > 0) {
+      const gain = units * (sell - buy);
+      parts.push(gain > 0 ? `Zisk na jeden order ≈ ${fmtPrice(gain)} (${((sell - buy) / buy * 100).toLocaleString('cs-CZ', { maximumFractionDigits: 1 })} %).` : 'Pozor: „prodej nad" není vyšší než „nákup pod" – takhle bot neprodělá jen díky pojistce „nikdy pod nákupní cenu".');
+      if (sell <= buy) box.classList.add('warn');
+    }
+    if (cfg.trade.maxOrders > 1) parts.push(` Až ${cfg.trade.maxOrders} orderů najednou (do ${fmtPrice(cfg.trade.maxOrders * units * buy)}).`);
+    if (live) box.classList.add('warn');
+    for (const p of parts) box.append(p);
+  }
+  try {
+    const saved = {};
+    for (const id of FORM_IDS) saved[id] = $(id).type === 'checkbox' ? $(id).checked : $(id).value;
+    saved.mode = live ? 'live' : 'test';
+    localStorage.setItem('spruce-cfg-form', JSON.stringify(saved));   // tokeny se neukládají
+  } catch (e) { /* nevadí */ }
+}
+
+function restoreForm () {
+  try {
+    const saved = JSON.parse(localStorage.getItem('spruce-cfg-form') || 'null');
+    if (!saved) return;
+    for (const id of FORM_IDS) {
+      if (!(id in saved)) continue;
+      if ($(id).type === 'checkbox') $(id).checked = !!saved[id]; else $(id).value = saved[id];
+    }
+    if (saved.mode === 'live') document.querySelector('input[name=fMode][value=live]').checked = true;
+  } catch (e) { /* nevadí */ }
+}
+
+$('cfgForm').addEventListener('input', renderConfig);
+$('cfgForm').addEventListener('change', renderConfig);
+$('cfgForm').addEventListener('submit', (ev) => ev.preventDefault());
+
+$('cfgDownload').addEventListener('click', () => {
+  renderConfig();
+  const blob = new Blob([$('cfgJson').value], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'config.local.json';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
+$('cfgCopy').addEventListener('click', async () => {
+  renderConfig();
+  const ta = $('cfgJson');
+  let ok = false;
+  try { await navigator.clipboard.writeText(ta.value); ok = true; } catch (e) { ta.focus(); ta.select(); try { ok = document.execCommand('copy'); } catch (e2) { ok = false; } }
+  $('copyOk').hidden = false;
+  $('copyOk').textContent = ok ? 'Zkopírováno – ulož jako config.local.json.' : 'Označ text v náhledu a zkopíruj ručně.';
+  setTimeout(() => { $('copyOk').hidden = true; }, 4000);
+});
+
+// návrh limitů: −5 % / +5 % od aktuální reálné ceny (bez výkřiků)
+$('suggestBtn').addEventListener('click', () => {
+  const fnow = data ? filteredNow() : null;
+  const cur = fnow ? fnow.v : (data ? realTop(data) : null);
+  if (cur == null) { $('suggestHint').textContent = 'Ceny se ještě nenačetly.'; return; }
+  $('fBuy').value = (Math.floor(cur * 0.95 * 10) / 10).toString();
+  $('fSell').value = (Math.ceil(cur * 1.05 * 10) / 10).toString();
+  $('suggestHint').textContent = `podle reálné ceny ${fmtPrice(cur)}: nákup −5 %, prodej +5 %`;
+  renderConfig();
+});
+
+restoreForm();
+renderConfig();
 
 refresh();
 </script>
