@@ -107,7 +107,11 @@
   .ranges button:hover { background: var(--hover-wash); }
   .ranges button[aria-pressed="true"] { background: var(--hover-wash); color: var(--ink); border-color: var(--border); font-weight: 600; }
   .chart-wrap { position: relative; }
-  .chart-wrap svg { display: block; width: 100%; height: 260px; outline: none; }
+  .chart-wrap svg { display: block; width: 100%; height: 260px; outline: none; touch-action: pan-y; }
+  @media (max-width: 720px) {
+    .chart-wrap svg { height: 320px; }
+    .chart-card { padding: 14px 10px; }
+  }
   .chart-wrap svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 4px; border-radius: 6px; }
   .empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
   .tooltip {
@@ -297,8 +301,51 @@ function showNotice (html) { const n = $('notice'); n.textContent = ''; n.append
 function hideNotice () { $('notice').classList.remove('show'); }
 function setStatus (state, text) { const s = $('status'); s.dataset.state = state; $('statusText').textContent = text; }
 
+// ---------- filtr výkřiků ----------
+// Jednorázový úlet (cena 60 → jedno čtení 200, protože někdo zrovna dal šílený
+// order) se do grafu nekreslí – místo něj se podrží poslední normální hodnota.
+// Když se nová cena udrží SPIKE_ACCEPT čtení po sobě, bere se jako nová realita.
+const SPIKE_FACTOR = 1.6;
+const SPIKE_ACCEPT = 3;
+const medianOf = (arr) => {
+  const a = arr.filter(Number.isFinite).slice().sort((x, y) => x - y);
+  if (!a.length) return null;
+  const m = Math.floor(a.length / 2);
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+};
+function filterSpikes (pts) {
+  if (pts.length < 4) return pts.map(p => ({ ...p, raw: p.v }));
+  const out = [];
+  const accepted = [];
+  let streak = 0;
+  for (const p of pts) {
+    const ref = medianOf(accepted.slice(-7));
+    let v = p.v;
+    let filtered = false;
+    if (ref != null && ref > 0 && (v > ref * SPIKE_FACTOR || v < ref / SPIKE_FACTOR)) {
+      streak++;
+      if (streak < SPIKE_ACCEPT && accepted.length) {
+        v = accepted[accepted.length - 1];   // podrž poslední normální hodnotu
+        filtered = true;
+      } else {
+        streak = 0;   // drží se to už potřetí → nová realita
+      }
+    } else {
+      streak = 0;
+    }
+    accepted.push(v);
+    out.push({ ...p, v, raw: p.v, filtered });
+  }
+  return out;
+}
+
 // „reálné" hodnoty (bot v3.2+); u starších dat spadne na celkové
 const realTop = (d) => (d.effective_top != null ? d.effective_top : d.best);
+/** Aktuální reálná cena po odfiltrování výkřiků (poslední bod filtrované řady). */
+function filteredNow () {
+  const pts = filterSpikes((data.history || []).filter(p => ptValue(p) != null).map(p => ({ t: p.t, v: ptValue(p) })));
+  return pts.length ? pts[pts.length - 1] : null;
+}
 const realDemand = (d) => (d.demand_real != null ? d.demand_real : d.demand);
 const realCount = (d) => (d.count_real != null ? d.count_real : d.count);
 const ptValue = (p) => (p.eff != null ? p.eff : p.best);
@@ -331,7 +378,9 @@ function render () {
   }
 
   // hero + tiles
-  const hero = realTop(data);
+  const fnow = filteredNow();
+  const hero = fnow ? fnow.v : realTop(data);
+  const heroFiltered = !!(fnow && fnow.filtered);
   const minDem = data.effective_min_demand || 25000;
   $('bestLabel').textContent = 'Reálná cena za kus';
   $('best').textContent = '';
@@ -341,6 +390,7 @@ function render () {
     $('best').append(u);
   } else $('best').textContent = '–';
   const subs = [];
+  if (heroFiltered && fnow.raw != null) subs.push(`⚠ právě je v knize výkřik ${fmtPrice(fnow.raw)} – ignorován, dokud nevydrží`);
   if (data.effective_top != null) subs.push(`nejvyšší cena krytá ≥ ${fmtCompact(minDem)} ks poptávky`);
   if (data.best != null && data.effective_top != null && data.best > data.effective_top) {
     subs.push(`nejvyšší order ${fmtPrice(data.best)}` + (data.best_remaining != null ? ` (zbývá jen ${fmtCompact(data.best_remaining)} ks)` : ''));
@@ -381,14 +431,14 @@ function renderDelta () {
   const el = $('delta');
   el.textContent = '';
   el.className = 'delta flat';
-  const h = data.history || [];
-  const cur = realTop(data);
+  const h = filterSpikes((data.history || []).filter(p => ptValue(p) != null).map(p => ({ t: p.t, v: ptValue(p) })));
+  const cur = h.length ? h[h.length - 1].v : realTop(data);
   if (cur == null || h.length < 2) return;
   const target = (data.updated_ts || 0) - 24 * 3600;
   let ref = null;
-  for (const p of h) { if (ptValue(p) != null && p.t <= target) ref = p; }
-  if (!ref) { ref = h.find(p => ptValue(p) != null); if (!ref || ref === h[h.length - 1]) return; }
-  const refV = ptValue(ref);
+  for (const p of h) { if (p.t <= target) ref = p; }
+  if (!ref) { ref = h[0]; if (ref === h[h.length - 1]) return; }
+  const refV = ref.v;
   const diff = cur - refV;
   const pct = refV ? diff / refV * 100 : 0;
   const dir = Math.abs(diff) < 0.005 ? 'flat' : diff > 0 ? 'up' : 'down';
@@ -444,10 +494,10 @@ function seriesForRange () {
   const now = data.updated_ts || Math.floor(Date.now() / 1000);
   if (range === '24h' || range === '48h') {
     const span = range === '24h' ? 24 * 3600 : 48 * 3600;
-    return (data.history || []).filter(p => ptValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: ptValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand }));
+    return filterSpikes((data.history || []).filter(p => ptValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: ptValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand })));
   }
   const span = range === '7d' ? 7 * 86400 : 30 * 86400;
-  return (data.hourly || []).filter(p => hourValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: hourValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand, min: p.eff_min != null ? p.eff_min : p.best_min, max: p.eff_max != null ? p.eff_max : p.best_max }));
+  return filterSpikes((data.hourly || []).filter(p => hourValue(p) != null && now - p.t <= span).map(p => ({ t: p.t, v: hourValue(p), n: p.nreal != null ? p.nreal : p.n, demand: p.dreal != null ? p.dreal : p.demand, min: p.eff_min != null ? p.eff_min : p.best_min, max: p.eff_max != null ? p.eff_max : p.best_max })));
 }
 
 function niceTicks (min, max, count) {
@@ -478,7 +528,7 @@ function renderChart () {
   svg.textContent = '';
   const tip = $('tooltip'); tip.style.display = 'none';
   const pts = seriesForRange();
-  const W = svg.clientWidth || 800, H = 260;
+  const W = svg.clientWidth || 800, H = svg.clientHeight || 260;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   renderHistTable(pts);
   if (pts.length < 2) {
@@ -486,7 +536,9 @@ function renderChart () {
     chartState = null;
     return;
   }
-  const pad = { l: 46, r: 16, t: 14, b: 28 };
+  const mobile = W < 520;
+  const axisFont = mobile ? 13 : 12;
+  const pad = { l: mobile ? 42 : 46, r: mobile ? 10 : 16, t: 14, b: mobile ? 30 : 28 };
   const x0 = pad.l, x1 = W - pad.r, y0 = pad.t, y1 = H - pad.b;
   const tMin = pts[0].t, tMax = pts[pts.length - 1].t;
   const vals = pts.map(p => p.v);
@@ -498,21 +550,21 @@ function renderChart () {
   for (const tv of ticks) {
     const y = sy(tv);
     svg.append(el('line', { x1: x0, x2: x1, y1: y, y2: y, stroke: 'var(--grid)', 'stroke-width': 1, 'shape-rendering': 'crispEdges' }));
-    svg.append(el('text', { x: x0 - 8, y: y + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 12, style: 'font-variant-numeric: tabular-nums' }, '$' + fmtTickNum(tv)));
+    svg.append(el('text', { x: x0 - 6, y: y + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': axisFont, style: 'font-variant-numeric: tabular-nums' }, '$' + fmtTickNum(tv)));
   }
   svg.append(el('line', { x1: x0, x2: x1, y1: y1, y2: y1, stroke: 'var(--axis)', 'stroke-width': 1, 'shape-rendering': 'crispEdges' }));
 
   // osa x
   const longRange = range === '7d' || range === '30d';
   const candidates = longRange ? [86400, 2 * 86400, 5 * 86400, 7 * 86400] : [2 * 3600, 4 * 3600, 6 * 3600, 12 * 3600, 24 * 3600];
-  const labelPx = longRange ? 80 : 56;
+  const labelPx = longRange ? (mobile ? 92 : 80) : (mobile ? 68 : 56);
   let stepSec = candidates[candidates.length - 1];
   for (const c of candidates) { if ((tMax - tMin) / c * labelPx <= (x1 - x0)) { stepSec = c; break; } }
   const first = Math.ceil(tMin / stepSec) * stepSec;
   for (let t = first; t <= tMax; t += stepSec) {
     const x = sx(t);
     svg.append(el('line', { x1: x, x2: x, y1: y1, y2: y1 + 4, stroke: 'var(--axis)', 'stroke-width': 1 }));
-    svg.append(el('text', { x, y: y1 + 18, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 12 }, longRange ? fmtDay(t) : fmtTime(t)));
+    svg.append(el('text', { x, y: y1 + 19, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': axisFont }, longRange ? fmtDay(t) : fmtTime(t)));
   }
 
   // plocha + čára
@@ -542,7 +594,7 @@ function renderHistTable (pts) {
   const rows = pts.slice().reverse();
   for (const p of rows) {
     const tr = document.createElement('tr');
-    const cells = [['', fmtDateTime(p.t)], ['num', fmtPrice(p.v)], ['num', p.n != null ? fmtCZ.format(p.n) : '–'], ['num', p.demand != null ? fmtCompact(p.demand) : '–']];
+    const cells = [['', fmtDateTime(p.t)], ['num', fmtPrice(p.v) + (p.filtered && p.raw != null ? ` (výkřik ${fmtPrice(p.raw)})` : '')], ['num', p.n != null ? fmtCZ.format(p.n) : '–'], ['num', p.demand != null ? fmtCompact(p.demand) : '–']];
     for (const [cls, txt] of cells) { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = txt; tr.append(td); }
     tbody.append(tr);
   }
@@ -568,6 +620,7 @@ function showHover (i) {
   const lbl = document.createElement('span'); lbl.textContent = 'reálná cena / ks';
   row.append(key, strong, lbl);
   tip.append(t, row);
+  if (p.filtered && p.raw != null) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `⚠ výkřik ${fmtPrice(p.raw)} ignorován`; tip.append(m); }
   if (p.min != null && p.max != null && p.min !== p.max) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `rozsah ${fmtPrice(p.min)} – ${fmtPrice(p.max)}`; tip.append(m); }
   if (p.n != null) { const m = document.createElement('div'); m.className = 'more'; m.textContent = `${fmtCZ.format(p.n)} reálných orderů · poptávka ${fmtCompact(p.demand)}`; tip.append(m); }
   tip.style.display = 'block';
