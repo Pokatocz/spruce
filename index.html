@@ -305,7 +305,7 @@ function setStatus (state, text) { const s = $('status'); s.dataset.state = stat
 // Jednorázový úlet (cena 60 → jedno čtení 200, protože někdo zrovna dal šílený
 // order) se do grafu nekreslí – místo něj se podrží poslední normální hodnota.
 // Když se nová cena udrží SPIKE_ACCEPT čtení po sobě, bere se jako nová realita.
-const SPIKE_FACTOR = 1.6;
+const SPIKE_FACTOR = 1.15;   // >15 % od klouzavého mediánu = výkřik (normální šum je do ~10 %)
 const SPIKE_ACCEPT = 3;
 const medianOf = (arr) => {
   const a = arr.filter(Number.isFinite).slice().sort((x, y) => x - y);
